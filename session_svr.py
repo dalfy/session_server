@@ -9,7 +9,6 @@ app.config.update(dict(
     DATABASE=os.path.join(app.root_path, 'database/data.db')
 ))
 
-
 def connect_db():
     rv = sqlite3.connect(app.config['DATABASE'])
     rv.row_factory = sqlite3.Row
@@ -39,28 +38,16 @@ def close_db(error):
         g.sqlite_db.close()
 
 
-@app.errorhandler(503)
-def custom503(error):
-    response = make_response()
-    response.status_code = 503
-    return response
-
 @app.route('/sessions/<token>', methods=['GET'])
 def get_session(token):
     db = get_db()
     json_ret = dict()
 
-    db.execute('INSERT OR IGNORE INTO sessions (token) VALUES (?)', [token]) #Will fail if token already exist
+    cursor = db.execute('INSERT OR IGNORE INTO sessions (token) VALUES (?)', [token]) #Will fail if token already exist
     db.commit()
     cursor = db.execute('SELECT * FROM sessions WHERE token = ? LIMIT 1', [token])
-    row = cursor.fetchall()
-    if len(row) == 1:
-        json_ret['session'] = {'id':    row[0][0], 'token': row[0][1]}
-        return json.dumps(json_ret)
-    else:
-        abort(503)
-
+    json_ret['session'] = {'id':    cursor.lastrowid, 'token': token}
+    return json.dumps(json_ret)
 
 if __name__ == "__main__":
     app.run(debug=True)
-
