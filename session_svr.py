@@ -39,11 +39,6 @@ def close_db(error):
         g.sqlite_db.close()
 
 
-@app.errorhandler(503)
-def custom503(error):
-    response = make_response()
-    response.status_code = 503
-    return response
 
 @app.route('/sessions/<token>', methods=['GET'])
 def get_session(token):
@@ -58,7 +53,7 @@ def get_session(token):
         json_ret['session'] = {'id':    row[0][0], 'token': row[0][1]}
         return json.dumps(json_ret)
     else:
-        abort(503)
+        abort(500)
 
 
 if __name__ == "__main__":
